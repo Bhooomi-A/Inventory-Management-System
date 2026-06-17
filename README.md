@@ -105,9 +105,9 @@ Open `frontend/index.html` directly in your browser — no server needed for the
 1. **Price is in Indian Rupees (₹)** — formatted using `en-IN` locale
 2. **Product names must be unique** — enforced at both API and DB level
 3. **Low stock threshold defaults to 10** — configurable per product
-4. **SQLite is used for simplicity** — for production, PostgreSQL (already familiar from Jio internship) would be the right choice
+4. **SQLite is used for simplicity** — for production, PostgreSQL would be the right choice
 5. **No authentication** — assumed single-user internal tool; JWT auth can be added as an extension
-6. **Negative stock is impossible** — blocked at both frontend (live preview) and backend (HTTP 400 with clear message)
+6. **Negative stock is impossible** — blocked at both frontend (live preview) and backend 
 
 ---
 
@@ -126,7 +126,7 @@ The main challenge was ensuring the negative stock prevention was robust at both
 
 ## Possible Production Enhancements
 
-- Replace SQLite with PostgreSQL (already used at Jio internship)
+- Replace SQLite with PostgreSQL 
 - Add JWT-based authentication and role management
 - Email/SMS alerts when stock drops below threshold
 - CSV export of inventory data
