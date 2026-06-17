@@ -71,7 +71,7 @@ uvicorn main:app --reload --port 5000
 
 The API will be available at:
 - **Base URL:** `http://localhost:5000`
-- **Interactive Swagger Docs:** `http://localhost:5000/docs` ← great to show in your interview!
+- **Interactive Swagger Docs:** `http://localhost:5000/docs` 
 - **SQLite DB** (`inventory.db`) is auto-created with 8 sample products on first run
 
 ### Step 4 — Open the Frontend
