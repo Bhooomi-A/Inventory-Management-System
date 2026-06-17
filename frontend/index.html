@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>StockSense – Inventory Manager</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ── CSS VARIABLES (theme colors) ──────────────────────────────── */
+    :root {
+      --bg:          #0f1117;
+      --card:        #1a1d27;
+      --input-bg:    #242736;
+      --border:      #2e3248;
+      --text:        #eef0f8;
+      --muted:       #8890b5;
+      --dimmed:      #555d80;
+      --accent:      #6c63ff;
+      --success:     #22c55e;
+      --warning:     #f59e0b;
+      --danger:      #ef4444;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      font-size: 14px;
+    }
+
+    h1, h2, h3 { font-family: 'Space Grotesk', sans-serif; }
+
+    /* ── HEADER ─────────────────────────────────────────────────────── */
+    header {
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      padding: 0 32px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .logo { display: flex; align-items: center; gap: 10px; }
+    .logo-icon { font-size: 22px; }
+    .logo-name { font-size: 18px; font-weight: 700; letter-spacing: -0.02em; }
+    .logo-sub { color: var(--dimmed); font-size: 12px; margin-left: 8px; }
+
+    /* ── MAIN LAYOUT ─────────────────────────────────────────────────── */
+    main { max-width: 1200px; margin: 0 auto; padding: 32px 24px; }
+
+    /* ── STAT CARDS ─────────────────────────────────────────────────── */
+    .stats-grid {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-bottom: 28px;
+    }
+
+    .stat-card {
+      flex: 1;
+      min-width: 130px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px 20px;
+    }
+
+    .stat-icon { font-size: 22px; margin-bottom: 6px; }
+
+    .stat-value {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 26px;
+      font-weight: 700;
+      line-height: 1;
+      margin-bottom: 5px;
+    }
+
+    .stat-label { color: var(--muted); font-size: 12px; }
+
+    /* ── TOOLBAR (search + filters + add button) ─────────────────────── */
+    .toolbar {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    input, select {
+      background: var(--input-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 9px 14px;
+      color: var(--text);
+      font-size: 14px;
+      font-family: 'Inter', sans-serif;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input:focus, select:focus { border-color: var(--accent); }
+
+    #search-input { flex: 1; min-width: 220px; }
+
+    /* ── BUTTONS ─────────────────────────────────────────────────────── */
+    .btn {
+      padding: 9px 18px;
+      border-radius: 8px;
+      border: none;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      transition: opacity 0.2s;
+      white-space: nowrap;
+    }
+    .btn:hover { opacity: 0.88; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .btn-primary   { background: var(--accent);  color: #fff; }
+    .btn-success   { background: var(--success); color: #fff; }
+    .btn-danger    { background: var(--danger);  color: #fff; }
+    .btn-outline   { background: transparent; border: 1px solid var(--border); color: var(--muted); }
+    .btn-warning-outline {
+      background: rgba(245,158,11,0.1);
+      border: 1px solid var(--warning);
+      color: var(--warning);
+    }
+
+    /* ── RESULT COUNT ────────────────────────────────────────────────── */
+    .result-count { color: var(--dimmed); font-size: 13px; margin-bottom: 12px; }
+
+    /* ── TABLE ───────────────────────────────────────────────────────── */
+    .table-wrap {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      overflow-x: auto;
+    }
+
+    table { width: 100%; border-collapse: collapse; }
+
+    thead tr { background: var(--input-bg); }
+
+    th {
+      padding: 12px 16px;
+      text-align: left;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--muted);
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    td { padding: 13px 16px; border-bottom: 1px solid var(--border); }
+    tr:last-child td { border-bottom: none; }
+    tbody tr:hover { background: var(--input-bg); }
+
+    .product-name { font-weight: 600; font-size: 14px; }
+    .product-sub  { color: var(--dimmed); font-size: 11px; margin-top: 2px; }
+
+    .category-badge {
+      background: var(--input-bg);
+      border: 1px solid var(--border);
+      padding: 3px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .price { color: var(--accent); font-weight: 500; }
+
+    .qty-number {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    /* ── STATUS BADGES ───────────────────────────────────────────────── */
+    .badge {
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .badge-ok      { background: rgba(34,197,94,0.1);  color: var(--success); }
+    .badge-low     { background: rgba(245,158,11,0.12); color: var(--warning); border: 1px solid var(--warning); }
+    .badge-out     { background: rgba(239,68,68,0.12);  color: var(--danger);  border: 1px solid var(--danger); }
+
+    .action-btns { display: flex; gap: 8px; }
+
+    .btn-sm {
+      padding: 6px 12px;
+      font-size: 12px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      font-weight: 500;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .btn-stock {
+      background: rgba(108,99,255,0.12);
+      border: 1px solid var(--accent);
+      color: var(--accent);
+    }
+
+    .btn-del { background: transparent; border: 1px solid var(--border); color: var(--danger); }
+
+    /* ── EMPTY STATE ─────────────────────────────────────────────────── */
+    .empty {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--dimmed);
+    }
+    .empty-icon { font-size: 48px; margin-bottom: 12px; }
+    .empty-title { font-size: 16px; font-family: 'Space Grotesk', sans-serif; color: var(--muted); }
+    .empty-sub { font-size: 13px; margin-top: 6px; }
+
+    /* ── MODAL ───────────────────────────────────────────────────────── */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.72);
+      z-index: 500;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .modal-overlay.open { display: flex; }
+
+    .modal {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px 32px;
+      width: 100%;
+      max-width: 460px;
+      animation: fadeUp 0.22s ease;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .modal h2 { margin-bottom: 20px; font-size: 18px; }
+
+    .form-group { margin-bottom: 15px; }
+
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .form-row { display: flex; gap: 12px; }
+    .form-row .form-group { flex: 1; }
+
+    .field-error { color: var(--danger); font-size: 11px; margin-top: 4px; }
+
+    .input-error { border-color: var(--danger) !important; }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 22px;
+    }
+
+    /* Stock Update Modal specific */
+    .action-toggle {
+      display: flex;
+      background: var(--input-bg);
+      border-radius: 8px;
+      padding: 4px;
+      margin-bottom: 18px;
+    }
+
+    .toggle-btn {
+      flex: 1;
+      padding: 8px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 13px;
+      font-family: 'Inter', sans-serif;
+      background: transparent;
+      color: var(--muted);
+      transition: all 0.2s;
+    }
+
+    .toggle-btn.active-add    { background: var(--success); color: #fff; }
+    .toggle-btn.active-remove { background: var(--danger);  color: #fff; }
+
+    .stock-preview {
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 14px;
+      margin-bottom: 14px;
+      display: none;
+    }
+
+    .preview-ok  { background: rgba(34,197,94,0.1);  border: 1px solid var(--success); color: var(--success); }
+    .preview-err { background: rgba(239,68,68,0.12); border: 1px solid var(--danger);  color: var(--danger); }
+
+    /* ── TOAST ───────────────────────────────────────────────────────── */
+    #toast {
+      position: fixed;
+      bottom: 28px;
+      right: 28px;
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 500;
+      z-index: 9999;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: all 0.25s ease;
+      pointer-events: none;
+      border: 1px solid var(--border);
+      background: var(--card);
+      max-width: 320px;
+    }
+    #toast.show { opacity: 1; transform: translateY(0); }
+    #toast.success { border-color: var(--success); color: var(--success); }
+    #toast.error   { border-color: var(--danger);  color: var(--danger); }
+
+    /* ── SPINNER ─────────────────────────────────────────────────────── */
+    .spinner {
+      width: 28px; height: 28px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin: 40px auto 12px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+<!-- ── HEADER ──────────────────────────────────────────────────────────────── -->
+<header>
+  <div class="logo">
+    <span class="logo-icon">📦</span>
+    <span class="logo-name">StockSense</span>
+    <span class="logo-sub">Inventory Management</span>
+  </div>
+  <button class="btn btn-primary" onclick="openAddModal()">+ Add Product</button>
+</header>
+
+<!-- ── MAIN ────────────────────────────────────────────────────────────────── -->
+<main>
+
+  <!-- Stat Cards -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon">📦</div>
+      <div class="stat-value" id="stat-total">—</div>
+      <div class="stat-label">Total Products</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">🗃️</div>
+      <div class="stat-value" id="stat-stock">—</div>
+      <div class="stat-label">Total Stock Units</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">⚠️</div>
+      <div class="stat-value" id="stat-low" style="color: var(--warning)">—</div>
+      <div class="stat-label">Low Stock Alerts</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">🚫</div>
+      <div class="stat-value" id="stat-out" style="color: var(--danger)">—</div>
+      <div class="stat-label">Out of Stock</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">🏷️</div>
+      <div class="stat-value" id="stat-cats">—</div>
+      <div class="stat-label">Categories</div>
+    </div>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <input type="text" id="search-input" placeholder="🔍  Search products or categories..." oninput="debounceSearch()" />
+    <select id="category-filter" onchange="loadProducts()">
+      <option value="">All Categories</option>
+    </select>
+    <button class="btn btn-warning-outline" id="low-stock-btn" onclick="toggleLowStock()">⚠️ Show Low Stock</button>
+    <button class="btn btn-outline" id="clear-btn" onclick="clearFilters()" style="display:none">✕ Clear</button>
+  </div>
+
+  <div class="result-count" id="result-count"></div>
+
+  <!-- Product Table -->
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Product</th>
+          <th>Category</th>
+          <th>Price</th>
+          <th>Quantity</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="product-tbody">
+        <tr>
+          <td colspan="6">
+            <div class="spinner"></div>
+            <div style="text-align:center; color:var(--dimmed); padding-bottom:20px">Loading inventory...</div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</main>
+
+<!-- ── ADD PRODUCT MODAL ─────────────────────────────────────────────────────── -->
+<div class="modal-overlay" id="add-modal" onclick="closeOnBackdrop(event, 'add-modal')">
+  <div class="modal">
+    <h2>Add New Product</h2>
+
+    <div class="form-group">
+      <label>Product Name</label>
+      <input type="text" id="add-name" placeholder="e.g. Wireless Keyboard" style="width:100%" />
+      <div class="field-error" id="err-name"></div>
+    </div>
+
+    <div class="form-group">
+      <label>Category</label>
+      <input type="text" id="add-category" placeholder="e.g. Electronics" style="width:100%" />
+      <div class="field-error" id="err-category"></div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Initial Quantity</label>
+        <input type="number" id="add-qty" placeholder="0" min="0" style="width:100%" />
+        <div class="field-error" id="err-qty"></div>
+      </div>
+      <div class="form-group">
+        <label>Price (₹)</label>
+        <input type="number" id="add-price" placeholder="0.00" min="0.01" step="0.01" style="width:100%" />
+        <div class="field-error" id="err-price"></div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Low Stock Alert Threshold</label>
+      <input type="number" id="add-threshold" value="10" min="1" style="width:100%" />
+      <div style="color:var(--dimmed); font-size:11px; margin-top:4px">Alert when quantity drops to or below this number</div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('add-modal')">Cancel</button>
+      <button class="btn btn-primary" id="add-submit-btn" onclick="submitAddProduct()">Add Product</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── UPDATE STOCK MODAL ─────────────────────────────────────────────────────── -->
+<div class="modal-overlay" id="stock-modal" onclick="closeOnBackdrop(event, 'stock-modal')">
+  <div class="modal">
+    <h2>Update Stock</h2>
+    <div style="color:var(--muted); font-size:13px; margin-bottom:18px" id="stock-modal-subtitle"></div>
+
+    <!-- Add / Remove Toggle -->
+    <div class="action-toggle">
+      <button class="toggle-btn active-add" id="toggle-add" onclick="setStockAction('add')">➕ Add Stock</button>
+      <button class="toggle-btn" id="toggle-remove" onclick="setStockAction('remove')">➖ Remove Stock</button>
+    </div>
+
+    <div class="form-group">
+      <label>Quantity</label>
+      <input type="number" id="stock-qty" placeholder="Enter quantity" min="1" style="width:100%" oninput="updateStockPreview()" />
+      <div class="field-error" id="err-stock-qty"></div>
+    </div>
+
+    <div class="form-group">
+      <label>Note (optional)</label>
+      <input type="text" id="stock-note" placeholder="e.g. Restocked from supplier" style="width:100%" />
+    </div>
+
+    <!-- Live Preview -->
+    <div class="stock-preview" id="stock-preview"></div>
+
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('stock-modal')">Cancel</button>
+      <button class="btn btn-success" id="stock-submit-btn" onclick="submitStockUpdate()">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── TOAST NOTIFICATION ──────────────────────────────────────────────────── -->
+<div id="toast"></div>
+
+
+<!-- ── JAVASCRIPT ──────────────────────────────────────────────────────────── -->
+<script>
+  const API = "http://localhost:5000/api";
+
+  // ── STATE ──────────────────────────────────────────────────────────────────
+  let showLowStock = false;
+  let currentProductId = null;
+  let currentStockAction = "add";
+  let currentProductQty = 0;
+  let searchTimer = null;
+
+  // ── ON PAGE LOAD ───────────────────────────────────────────────────────────
+  window.onload = () => {
+    loadStats();
+    loadProducts();
+  };
+
+  // ── LOAD STATS ─────────────────────────────────────────────────────────────
+  async function loadStats() {
+    try {
+      const res = await fetch(`${API}/stats`);
+      const json = await res.json();
+      if (!json.success) return;
+      const d = json.data;
+      document.getElementById("stat-total").textContent = d.total_products;
+      document.getElementById("stat-stock").textContent = d.total_stock?.toLocaleString("en-IN");
+      document.getElementById("stat-low").textContent  = d.low_stock_count;
+      document.getElementById("stat-out").textContent  = d.out_of_stock_count;
+      document.getElementById("stat-cats").textContent = d.total_categories;
+    } catch {
+      showToast("Backend not running. Start the FastAPI server.", "error");
+    }
+  }
+
+  // ── LOAD PRODUCTS ──────────────────────────────────────────────────────────
+  async function loadProducts() {
+    const search   = document.getElementById("search-input").value.trim();
+    const category = document.getElementById("category-filter").value;
+
+    let url = `${API}/products?`;
+    if (search)       url += `search=${encodeURIComponent(search)}&`;
+    if (category)     url += `category=${encodeURIComponent(category)}&`;
+    if (showLowStock) url += `lowStock=true`;
+
+    try {
+      const res  = await fetch(url);
+      const json = await res.json();
+      if (!json.success) return;
+
+      renderTable(json.data);
+      updateCategoryOptions(json.data);
+      updateResultCount(json.data.length);
+      updateClearBtn();
+    } catch {
+      renderError();
+    }
+  }
+
+  // ── RENDER TABLE ROWS ──────────────────────────────────────────────────────
+  function renderTable(products) {
+    const tbody = document.getElementById("product-tbody");
+
+    if (!products.length) {
+      tbody.innerHTML = `
+        <tr><td colspan="6">
+          <div class="empty">
+            <div class="empty-icon">📭</div>
+            <div class="empty-title">No products found</div>
+            <div class="empty-sub">Try a different search or add your first product</div>
+          </div>
+        </td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = products.map(p => {
+      const badge = p.is_out_of_stock
+        ? `<span class="badge badge-out">Out of Stock</span>`
+        : p.is_low_stock
+        ? `<span class="badge badge-low">⚠ Low Stock</span>`
+        : `<span class="badge badge-ok">In Stock</span>`;
+
+      const qtyColor = p.is_out_of_stock ? "var(--danger)" : p.is_low_stock ? "var(--warning)" : "var(--text)";
+
+      return `
+        <tr>
+          <td>
+            <div class="product-name">${escHtml(p.name)}</div>
+            <div class="product-sub">Alert at ≤ ${p.low_stock_threshold} units</div>
+          </td>
+          <td><span class="category-badge">${escHtml(p.category)}</span></td>
+          <td class="price">₹${parseFloat(p.price).toLocaleString("en-IN", {minimumFractionDigits:2})}</td>
+          <td><span class="qty-number" style="color:${qtyColor}">${p.quantity}</span></td>
+          <td>${badge}</td>
+          <td>
+            <div class="action-btns">
+              <button class="btn-sm btn-stock" onclick="openStockModal(${p.id}, '${escHtml(p.name)}', ${p.quantity})">Update Stock</button>
+              <button class="btn-sm btn-del" onclick="deleteProduct(${p.id}, '${escHtml(p.name)}')">🗑</button>
+            </div>
+          </td>
+        </tr>`;
+    }).join("");
+  }
+
+  function renderError() {
+    document.getElementById("product-tbody").innerHTML = `
+      <tr><td colspan="6" style="text-align:center;padding:40px;color:var(--danger)">
+        ⚠ Cannot connect to backend. Is the FastAPI server running on port 5000?
+      </td></tr>`;
+  }
+
+  // ── CATEGORY FILTER POPULATION ─────────────────────────────────────────────
+  function updateCategoryOptions(products) {
+    const sel = document.getElementById("category-filter");
+    const current = sel.value;
+    const cats = [...new Set(products.map(p => p.category))].sort();
+
+    // Only rebuild if categories changed
+    const existing = [...sel.options].slice(1).map(o => o.value);
+    if (JSON.stringify(cats) === JSON.stringify(existing)) return;
+
+    sel.innerHTML = `<option value="">All Categories</option>`;
+    cats.forEach(c => {
+      const opt = document.createElement("option");
+      opt.value = c; opt.textContent = c;
+      if (c === current) opt.selected = true;
+      sel.appendChild(opt);
+    });
+  }
+
+  function updateResultCount(count) {
+    document.getElementById("result-count").textContent =
+      `${count} product${count !== 1 ? "s" : ""} found${showLowStock ? " · Showing low stock only" : ""}`;
+  }
+
+  function updateClearBtn() {
+    const hasFilter = document.getElementById("search-input").value ||
+                      document.getElementById("category-filter").value ||
+                      showLowStock;
+    document.getElementById("clear-btn").style.display = hasFilter ? "inline-block" : "none";
+  }
+
+  // ── SEARCH DEBOUNCE ────────────────────────────────────────────────────────
+  function debounceSearch() {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(loadProducts, 300);
+  }
+
+  // ── FILTER CONTROLS ────────────────────────────────────────────────────────
+  function toggleLowStock() {
+    showLowStock = !showLowStock;
+    const btn = document.getElementById("low-stock-btn");
+    btn.textContent = showLowStock ? "⚠️ Showing Low Stock" : "⚠️ Show Low Stock";
+    btn.classList.toggle("btn-warning-outline", true);
+    loadProducts();
+  }
+
+  function clearFilters() {
+    document.getElementById("search-input").value = "";
+    document.getElementById("category-filter").value = "";
+    showLowStock = false;
+    document.getElementById("low-stock-btn").textContent = "⚠️ Show Low Stock";
+    loadProducts();
+  }
+
+  // ── ADD PRODUCT MODAL ──────────────────────────────────────────────────────
+  function openAddModal() {
+    clearAddForm();
+    document.getElementById("add-modal").classList.add("open");
+  }
+
+  function clearAddForm() {
+    ["add-name","add-category","add-qty","add-price"].forEach(id => document.getElementById(id).value = "");
+    document.getElementById("add-threshold").value = "10";
+    ["err-name","err-category","err-qty","err-price"].forEach(id => document.getElementById(id).textContent = "");
+  }
+
+  async function submitAddProduct() {
+    // Clear previous errors
+    ["err-name","err-category","err-qty","err-price"].forEach(id => {
+      document.getElementById(id).textContent = "";
+      document.getElementById(id.replace("err-","add-"))?.classList.remove("input-error");
+    });
+
+    const name      = document.getElementById("add-name").value.trim();
+    const category  = document.getElementById("add-category").value.trim();
+    const quantity  = document.getElementById("add-qty").value;
+    const price     = document.getElementById("add-price").value;
+    const threshold = document.getElementById("add-threshold").value;
+
+    // Client-side validation
+    let valid = true;
+    if (!name)                              { setErr("err-name", "add-name", "Name is required"); valid = false; }
+    if (!category)                          { setErr("err-category", "add-category", "Category is required"); valid = false; }
+    if (quantity === "" || parseInt(quantity) < 0) { setErr("err-qty", "add-qty", "Quantity must be 0 or more"); valid = false; }
+    if (!price || parseFloat(price) <= 0)   { setErr("err-price", "add-price", "Price must be greater than 0"); valid = false; }
+    if (!valid) return;
+
+    const btn = document.getElementById("add-submit-btn");
+    btn.disabled = true; btn.textContent = "Adding...";
+
+    try {
+      const res = await fetch(`${API}/products`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, category, quantity: parseInt(quantity), price: parseFloat(price), low_stock_threshold: parseInt(threshold) || 10 })
+      });
+      const json = await res.json();
+
+      if (!json.success) {
+        showToast(json.detail || json.message, "error");
+      } else {
+        showToast("Product added successfully!", "success");
+        closeModal("add-modal");
+        loadProducts();
+        loadStats();
+      }
+    } catch {
+      showToast("Failed to add product. Check backend.", "error");
+    } finally {
+      btn.disabled = false; btn.textContent = "Add Product";
+    }
+  }
+
+  // ── STOCK UPDATE MODAL ─────────────────────────────────────────────────────
+  function openStockModal(id, name, qty) {
+    currentProductId  = id;
+    currentProductQty = qty;
+    currentStockAction = "add";
+
+    document.getElementById("stock-modal-subtitle").textContent =
+      `${name}  ·  Current stock: ${qty} units`;
+
+    document.getElementById("stock-qty").value  = "";
+    document.getElementById("stock-note").value = "";
+    document.getElementById("err-stock-qty").textContent = "";
+    document.getElementById("stock-preview").style.display = "none";
+
+    setStockAction("add");
+    document.getElementById("stock-modal").classList.add("open");
+  }
+
+  function setStockAction(action) {
+    currentStockAction = action;
+    document.getElementById("toggle-add").className    = "toggle-btn" + (action === "add"    ? " active-add"    : "");
+    document.getElementById("toggle-remove").className = "toggle-btn" + (action === "remove" ? " active-remove" : "");
+
+    const submitBtn = document.getElementById("stock-submit-btn");
+    submitBtn.style.background = action === "add" ? "var(--success)" : "var(--danger)";
+    updateStockPreview();
+  }
+
+  function updateStockPreview() {
+    const qty = parseInt(document.getElementById("stock-qty").value);
+    const preview = document.getElementById("stock-preview");
+
+    if (!qty || qty <= 0) { preview.style.display = "none"; return; }
+
+    const newQty = currentStockAction === "add"
+      ? currentProductQty + qty
+      : currentProductQty - qty;
+
+    preview.style.display = "block";
+
+    if (newQty < 0) {
+      preview.className = "stock-preview preview-err";
+      preview.innerHTML = `❌ Not enough stock — only ${currentProductQty} units available`;
+      document.getElementById("stock-submit-btn").disabled = true;
+    } else {
+      preview.className = "stock-preview preview-ok";
+      preview.innerHTML = `✅ Stock will change: ${currentProductQty} → <strong>${newQty}</strong> units`;
+      document.getElementById("stock-submit-btn").disabled = false;
+    }
+  }
+
+  async function submitStockUpdate() {
+    document.getElementById("err-stock-qty").textContent = "";
+    const qty  = parseInt(document.getElementById("stock-qty").value);
+    const note = document.getElementById("stock-note").value.trim();
+
+    if (!qty || qty <= 0) {
+      document.getElementById("err-stock-qty").textContent = "Enter a valid quantity greater than 0";
+      return;
+    }
+
+    // Check negative stock on frontend too
+    if (currentStockAction === "remove" && currentProductQty - qty < 0) {
+      document.getElementById("err-stock-qty").textContent =
+        `Only ${currentProductQty} units available. Cannot remove ${qty}.`;
+      return;
+    }
+
+    const btn = document.getElementById("stock-submit-btn");
+    btn.disabled = true; btn.textContent = "Updating...";
+
+    try {
+      const res = await fetch(`${API}/products/${currentProductId}/stock`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: currentStockAction, quantity: qty, note: note || null })
+      });
+      const json = await res.json();
+
+      if (!json.success) {
+        showToast(json.detail || json.message, "error");
+      } else {
+        showToast(`Stock ${currentStockAction === "add" ? "added" : "removed"} successfully!`, "success");
+        closeModal("stock-modal");
+        loadProducts();
+        loadStats();
+      }
+    } catch {
+      showToast("Failed to update stock.", "error");
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Confirm";
+    }
+  }
+
+  // ── DELETE PRODUCT ─────────────────────────────────────────────────────────
+  async function deleteProduct(id, name) {
+    if (!confirm(`Delete "${name}"? This cannot be undone.`)) return;
+    try {
+      const res  = await fetch(`${API}/products/${id}`, { method: "DELETE" });
+      const json = await res.json();
+      if (json.success) {
+        showToast("Product deleted", "success");
+        loadProducts();
+        loadStats();
+      } else {
+        showToast(json.detail || "Failed to delete", "error");
+      }
+    } catch {
+      showToast("Failed to delete product.", "error");
+    }
+  }
+
+  // ── MODAL HELPERS ──────────────────────────────────────────────────────────
+  function closeModal(id) { document.getElementById(id).classList.remove("open"); }
+  function closeOnBackdrop(e, id) { if (e.target.id === id) closeModal(id); }
+
+  // ── VALIDATION HELPER ──────────────────────────────────────────────────────
+  function setErr(errId, inputId, msg) {
+    document.getElementById(errId).textContent = msg;
+    document.getElementById(inputId)?.classList.add("input-error");
+  }
+
+  // ── TOAST NOTIFICATION ─────────────────────────────────────────────────────
+  function showToast(msg, type = "success") {
+    const t = document.getElementById("toast");
+    t.textContent = (type === "success" ? "✓ " : "✕ ") + msg;
+    t.className = `show ${type}`;
+    setTimeout(() => { t.className = ""; }, 3500);
+  }
+
+  // ── XSS PROTECTION ─────────────────────────────────────────────────────────
+  function escHtml(str) {
+    return String(str).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  }
+</script>
+
+</body>
+</html>
