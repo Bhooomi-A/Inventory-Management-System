@@ -54,7 +54,7 @@ inventory-surekha/
 
 ### Step 1 — Clone the Repository
 ```bash
-git clone <your-repo-url>
+git clone <https://github.com/Bhooomi-A/Inventory-Management-System.git>
 cd inventory-surekha
 ```
 
